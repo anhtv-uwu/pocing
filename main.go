@@ -69,13 +69,13 @@ func main() {
 	if len(os.Args) == 1 {
 		fi, err := os.Stdin.Stat()
 		if err != nil || (fi.Mode()&os.ModeCharDevice) != 0 {
-			fmt.Fprintln(os.Stderr, "taker: no input. Run 'taker --help' for usage.")
+			fmt.Fprintln(os.Stderr, "pocing: no input. Run 'pocing --help' for usage.")
 			os.Exit(1)
 		}
 	}
 
 	ctx := kong.Parse(&cli,
-		kong.Name("taker"),
+		kong.Name("pocing"),
 		kong.Description("Generate professional code & HTTP evidence screenshots for security audits."),
 		kong.UsageOnError(),
 	)
@@ -107,7 +107,7 @@ func runSnap(cmd *SnapCmd) {
 			case name == "vscode-dark":
 				note = "  (default)"
 			case render.Themes[name].HTTPOnly:
-				note = "  (`taker http` only \u2014 not for code)"
+				note = "  (`pocing http` only \u2014 not for code)"
 			}
 			fmt.Printf("    %-20s  %s%s\n", name, render.Themes[name].Name, note)
 		}
@@ -132,7 +132,7 @@ func runSnap(cmd *SnapCmd) {
 		src, err = io.ReadAll(os.Stdin)
 	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: read input: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: read input: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -152,13 +152,13 @@ func runSnap(cmd *SnapCmd) {
 
 	all, err := highlight.Tokenize(string(src), cmd.Lang, cmd.File, theme.Chroma)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: tokenize: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: tokenize: %v\n", err)
 		os.Exit(1)
 	}
 
 	hlLines, err := highlight.ParseHighlightSpec(cmd.Highlight)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: parse highlight: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: parse highlight: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -166,7 +166,7 @@ func runSnap(cmd *SnapCmd) {
 	// centers on either.
 	hlLines = hlLines.Merge(findMarks(all, cmd.Mark))
 	if cmd.Context > 0 && len(hlLines) == 0 {
-		fmt.Fprintf(os.Stderr, "taker: --context needs --highlight or --mark to center on\n")
+		fmt.Fprintf(os.Stderr, "pocing: --context needs --highlight or --mark to center on\n")
 		os.Exit(1)
 	}
 
@@ -175,7 +175,7 @@ func runSnap(cmd *SnapCmd) {
 	// A spec that matches nothing would emit a blank PNG at exit 0 — exactly the
 	// kind of thing that reaches a report unnoticed.
 	if len(lines) == 0 {
-		fmt.Fprintf(os.Stderr, "taker: no lines matched (file has %d lines)\n", len(all))
+		fmt.Fprintf(os.Stderr, "pocing: no lines matched (file has %d lines)\n", len(all))
 		os.Exit(1)
 	}
 
@@ -189,7 +189,7 @@ func runSnap(cmd *SnapCmd) {
 		Caption:        cmd.Label,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: render: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: render: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -208,7 +208,7 @@ func runHTTP(cmd *HTTPCmd) {
 	case maxRows == 0:
 		maxRows = -1 // no cap
 	case maxRows < 0:
-		fmt.Fprintf(os.Stderr, "taker: --max-lines must be 0 or positive\n")
+		fmt.Fprintf(os.Stderr, "pocing: --max-lines must be 0 or positive\n")
 		os.Exit(1)
 	case maxRows < 5:
 		maxRows = 5
@@ -222,46 +222,46 @@ func runHTTP(cmd *HTTPCmd) {
 
 	reqSrc, err := os.ReadFile(cmd.Request)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: read request: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: read request: %v\n", err)
 		os.Exit(1)
 	}
 	resSrc, err := os.ReadFile(cmd.Response)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: read response: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: read response: %v\n", err)
 		os.Exit(1)
 	}
 	// An empty capture is a mistake upstream, not evidence of anything.
 	if len(bytes.TrimSpace(reqSrc)) == 0 {
-		fmt.Fprintf(os.Stderr, "taker: %s is empty\n", cmd.Request)
+		fmt.Fprintf(os.Stderr, "pocing: %s is empty\n", cmd.Request)
 		os.Exit(1)
 	}
 	if len(bytes.TrimSpace(resSrc)) == 0 {
-		fmt.Fprintf(os.Stderr, "taker: %s is empty\n", cmd.Response)
+		fmt.Fprintf(os.Stderr, "pocing: %s is empty\n", cmd.Response)
 		os.Exit(1)
 	}
 
 	reqHL, err := highlight.ParseHighlightSpec(cmd.ReqHL)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: parse --hr: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: parse --hr: %v\n", err)
 		os.Exit(1)
 	}
 	resHL, err := highlight.ParseHighlightSpec(cmd.ResHL)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: parse --hs: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: parse --hs: %v\n", err)
 		os.Exit(1)
 	}
 
 	// --mark's matches are found while rendering, so they count here too.
 	if cmd.Context > 0 && len(reqHL) == 0 && len(resHL) == 0 && len(cmd.Mark) == 0 {
-		fmt.Fprintf(os.Stderr, "taker: --context needs --hr, --hs or --mark to center on\n")
+		fmt.Fprintf(os.Stderr, "pocing: --context needs --hr, --hs or --mark to center on\n")
 		os.Exit(1)
 	}
 	if cmd.Context > 0 {
 		if cmd.ReqLines != "" {
-			fmt.Fprintf(os.Stderr, "taker: --context overrides --nr; ignoring it\n")
+			fmt.Fprintf(os.Stderr, "pocing: --context overrides --nr; ignoring it\n")
 		}
 		if cmd.ResLines != "" {
-			fmt.Fprintf(os.Stderr, "taker: --context overrides --ns; ignoring it\n")
+			fmt.Fprintf(os.Stderr, "pocing: --context overrides --ns; ignoring it\n")
 		}
 	}
 
@@ -284,7 +284,7 @@ func runHTTP(cmd *HTTPCmd) {
 		ResponseCaret: caret(cmd.CaretRes),
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: render: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: render: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -293,7 +293,7 @@ func runHTTP(cmd *HTTPCmd) {
 
 // resolveLineSpec picks which lines to render: --context expands around each
 // highlighted line, otherwise the explicit spec (empty = every line). Shared by
-// both commands so `taker http` trims the same way `taker` does.
+// both commands so `pocing http` trims the same way `pocing` does.
 //
 // Context only applies to a panel that has highlights to center on. In HTTP mode
 // one side often carries none — the request in a response-only finding — and
@@ -301,7 +301,7 @@ func runHTTP(cmd *HTTPCmd) {
 func resolveLineSpec(flag, spec string, hl highlight.Marks, context int) []int {
 	if s := highlight.ContextSpec(hl, context); s != nil {
 		if spec != "" {
-			fmt.Fprintf(os.Stderr, "taker: --context overrides %s; ignoring it\n", flag)
+			fmt.Fprintf(os.Stderr, "pocing: --context overrides %s; ignoring it\n", flag)
 		}
 		return s
 	}
@@ -312,7 +312,7 @@ func resolveLineSpec(flag, spec string, hl highlight.Marks, context int) []int {
 func parseLineSpec(flag, spec string) []int {
 	parsed, err := highlight.ParseLineSpec(spec)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: parse %s: %v\n", flag, err)
+		fmt.Fprintf(os.Stderr, "pocing: parse %s: %v\n", flag, err)
 		os.Exit(1)
 	}
 	return parsed
@@ -326,7 +326,7 @@ func findMarks(lines []highlight.LineTokens, needles []string) highlight.Marks {
 	for _, needle := range needles {
 		found := highlight.FindLiteral(lines, needle)
 		if found == nil {
-			fmt.Fprintf(os.Stderr, "taker: warning: --mark %q matched nothing\n", needle)
+			fmt.Fprintf(os.Stderr, "pocing: warning: --mark %q matched nothing\n", needle)
 			continue
 		}
 		out = out.Merge(found)
@@ -345,12 +345,12 @@ func clampWrapWidthFor(w int, httpMode bool, theme *render.Theme) int {
 		return w
 	}
 	if w < minCols {
-		fmt.Fprintf(os.Stderr, "taker: --wrap-width %d is below the %d-column minimum; using %d\n",
+		fmt.Fprintf(os.Stderr, "pocing: --wrap-width %d is below the %d-column minimum; using %d\n",
 			w, minCols, minCols)
 		return minCols
 	}
 	if max := render.MaxWrapColsFor(httpMode, theme); w > max {
-		fmt.Fprintf(os.Stderr, "taker: --wrap-width %d is wider than the canvas; wrapping at %d columns\n", w, max)
+		fmt.Fprintf(os.Stderr, "pocing: --wrap-width %d is wider than the canvas; wrapping at %d columns\n", w, max)
 		return max
 	}
 	return w
@@ -359,14 +359,14 @@ func clampWrapWidthFor(w int, httpMode bool, theme *render.Theme) int {
 func resolveTheme(name string) *render.Theme {
 	theme, ok := render.Themes[strings.ToLower(name)]
 	if !ok {
-		fmt.Fprintf(os.Stderr, "taker: unknown theme %q. Run --list-themes to see options.\n", name)
+		fmt.Fprintf(os.Stderr, "pocing: unknown theme %q. Run --list-themes to see options.\n", name)
 		os.Exit(1)
 	}
 	// Its style only covers the HTTP lexer's token types, so source code comes
 	// out flat — every keyword falling back to the plain text color.
 	if theme.HTTPOnly {
 		fmt.Fprintf(os.Stderr,
-			"taker: theme %q is only for `taker http`; source code renders without highlighting.\n"+
+			"pocing: theme %q is only for `pocing http`; source code renders without highlighting.\n"+
 				"       Use vscode-dark (default) or run --list-themes.\n", name)
 		os.Exit(1)
 	}
@@ -380,9 +380,9 @@ func resolveTheme(name string) *render.Theme {
 // corrupt PNG where a good piece of evidence used to be.
 func writePNG(img image.Image, path string) {
 	dir := filepath.Dir(path)
-	tmp, err := os.CreateTemp(dir, ".taker-*.png")
+	tmp, err := os.CreateTemp(dir, ".pocing-*.png")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "taker: create output: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: create output: %v\n", err)
 		os.Exit(1)
 	}
 	tmpName := tmp.Name()
@@ -390,7 +390,7 @@ func writePNG(img image.Image, path string) {
 	fail := func(format string, args ...any) {
 		tmp.Close()
 		os.Remove(tmpName)
-		fmt.Fprintf(os.Stderr, "taker: "+format+"\n", args...)
+		fmt.Fprintf(os.Stderr, "pocing: "+format+"\n", args...)
 		os.Exit(1)
 	}
 	if err := png.Encode(tmp, img); err != nil {
@@ -401,8 +401,8 @@ func writePNG(img image.Image, path string) {
 	}
 	if err := os.Rename(tmpName, path); err != nil {
 		os.Remove(tmpName)
-		fmt.Fprintf(os.Stderr, "taker: save output: %v\n", err)
+		fmt.Fprintf(os.Stderr, "pocing: save output: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("taker: wrote %s\n", path)
+	fmt.Printf("pocing: wrote %s\n", path)
 }

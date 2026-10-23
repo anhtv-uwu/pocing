@@ -156,7 +156,7 @@ func builtinStyle(name string) *chroma.Style {
 // ── Theme definitions ────────────────────────────────────────────────────────
 
 var Themes = map[string]*Theme{
-	// Default for `taker http`: evidence that reads as a Burp screenshot.
+	// Default for `pocing http`: evidence that reads as a Burp screenshot.
 	// The UI fields are reused by the Burp panel header — TabBarBg is the title
 	// strip, ActiveTab the tab row, TabAccent the active tab's underline.
 	// Burp Suite's dark theme on macOS, measured pixel by pixel from a real
@@ -423,7 +423,7 @@ var DefaultTheme = Themes["vscode-dark"]
 // like one.
 var BurpTheme = Themes["burp"]
 
-// BurpLightTheme is the default for `taker http`.
+// BurpLightTheme is the default for `pocing http`.
 var BurpLightTheme = Themes["burp-light"]
 
 // BurpDarkSyntax is Burp's dark-theme message colouring, measured from a

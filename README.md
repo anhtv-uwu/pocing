@@ -9,13 +9,12 @@ Produces VS Code Dark+-styled PNG images with syntax highlighting, line numbers,
 This fork is distributed as source. Build it locally:
 
 ```bash
-cd taker-burp-light
-go build -o taker-burp-light .
+cd pocing
+go build -o pocing .
 ```
 
-Requires Go 1.22+. The Go module path is still `github.com/anhtv-uwu/pocing` so
-upstream imports keep working; the binary/product name is `taker-burp-light`.
-(Examples below say `taker`; substitute `taker-burp-light` or alias it.)
+Requires Go 1.22+. The Go module path remains `github.com/anhtv-uwu/pocing` for
+compatibility with upstream imports; the executable is named `pocing`.
 
 ---
 
@@ -26,7 +25,7 @@ upstream imports keep working; the binary/product name is `taker-burp-light`.
 - **10 built-in themes** — VS Code Dark+, Dracula, Nord, Catppuccin Mocha, GitHub Dark, Gruvbox, One Dark, Monokai, Solarized Dark, Rosé Pine
 - **Line selection** — render only the lines you need (`1,5,10-20,30-40`), with gap bands stating how many lines were skipped
 - **Context mode** — automatically include N lines around highlighted lines (`--context 5`)
-- **Point at the finding, not the line** — mark a column range (`-H "7:63-85"`) or, better, paste the value itself (`-m "sk_live_4xT9mK2pQrN8vW1"`) and let `taker` locate every occurrence
+- **Point at the finding, not the line** — mark a column range (`-H "7:63-85"`) or, better, paste the value itself (`-m "sk_live_4xT9mK2pQrN8vW1"`) and let `pocing` locate every occurrence
 - **Captions** — `-L` adds a strip stating what the image proves, drawn outside the window so it never reads as something the tool under test printed
 - **Word wrap** — wrap long lines with continuation indicators; wraps automatically rather than cropping
 - **HTTP evidence mode** — side-by-side Request / Response pane that mimics Burp Suite's message editor, so evidence reads like a Burp screenshot
@@ -40,7 +39,7 @@ upstream imports keep working; the binary/product name is `taker-burp-light`.
 ### Code evidence
 
 ```
-taker [file] [flags]
+pocing [file] [flags]
 ```
 
 | Flag | Short | Default | Description |
@@ -62,41 +61,41 @@ taker [file] [flags]
 
 ```bash
 # Render a full file
-taker auth.go -o evidence.png
+pocing auth.go -o evidence.png
 
 # Highlight a specific vulnerability (line 42)
-taker auth.py -H 42 -o evidence.png
+pocing auth.py -H 42 -o evidence.png
 
 # Box the secret itself — no column counting
-taker auth.py -m "sk_live_4xT9mK2pQrN8vW1" -o evidence.png
+pocing auth.py -m "sk_live_4xT9mK2pQrN8vW1" -o evidence.png
 
 # Or give the columns explicitly
-taker auth.py -H "42:18-41" -o evidence.png
+pocing auth.py -H "42:18-41" -o evidence.png
 
 # Caption it so the image explains itself in the report
-taker auth.py -m "sk_live_4xT9mK2pQrN8vW1" \
+pocing auth.py -m "sk_live_4xT9mK2pQrN8vW1" \
   -L "SOLTAU-005 · client secret hardcoded in the mobile build" -o evidence.png
 
 # Highlight with 5 lines of context — ideal for SAST/AI agents
-taker auth.py -H 42 -c 5 -o evidence.png
+pocing auth.py -H 42 -c 5 -o evidence.png
 
 # Non-contiguous lines with gap indicator
-taker config.go -n "1-10,45-60" -H "52,57" -o evidence.png
+pocing config.go -n "1-10,45-60" -H "52,57" -o evidence.png
 
 # Wrap long lines (e.g. YAML with inline comments)
-taker application.yml -H "13,15" -c 4 -w -o evidence.png
+pocing application.yml -H "13,15" -c 4 -w -o evidence.png
 
 # From stdin
-cat vuln.js | taker -l javascript -t "vuln.js" -H 8 -o evidence.png
+cat vuln.js | pocing -l javascript -t "vuln.js" -H 8 -o evidence.png
 
 # Dracula theme
-taker secrets.py -H 15 -T dracula -o evidence.png
+pocing secrets.py -H 15 -T dracula -o evidence.png
 ```
 
 **Highlight + context (VS Code Dark+):**
 
 ```bash
-taker render/render.go -m "maxImageHeight" -c 4 -o evidence.png
+pocing render/render.go -m "maxImageHeight" -c 4 -o evidence.png
 ```
 
 ![Highlight with context](assets/example-highlight-context.png)
@@ -104,7 +103,7 @@ taker render/render.go -m "maxImageHeight" -c 4 -o evidence.png
 **Dracula theme, two marks found by content:**
 
 ```bash
-taker main.go -m "io.ReadAll" -m "filepath.IsAbs" -c 3 -T dracula -o evidence.png
+pocing main.go -m "io.ReadAll" -m "filepath.IsAbs" -c 3 -T dracula -o evidence.png
 ```
 
 ![Dracula theme](assets/example-dracula.png)
@@ -112,7 +111,7 @@ taker main.go -m "io.ReadAll" -m "filepath.IsAbs" -c 3 -T dracula -o evidence.pn
 **Catppuccin Mocha, line selection plus a content mark:**
 
 ```bash
-taker render/theme.go -n "1-32" -m "ChromeBg" -T catppuccin-mocha -o evidence.png
+pocing render/theme.go -n "1-32" -m "ChromeBg" -T catppuccin-mocha -o evidence.png
 ```
 
 ![Catppuccin Mocha](assets/example-catppuccin.png)
@@ -120,7 +119,7 @@ taker render/theme.go -n "1-32" -m "ChromeBg" -T catppuccin-mocha -o evidence.pn
 ### HTTP evidence
 
 ```
-taker http -r <request-file> -s <response-file> [flags]
+pocing http -r <request-file> -s <response-file> [flags]
 ```
 
 Renders a side-by-side Request / Response pane built to look like Burp Suite's message editor: title strip, `Pretty | Raw | Hex` view tabs with the active one underlined, dense line spacing, a gutter with no rule, and wrapped rows left unnumbered the way Burp does it.
@@ -156,29 +155,29 @@ There is no `-T` here. HTTP evidence always renders in a Burp palette, light or 
 
 ```bash
 # Basic HTTP evidence
-taker http -r request.http -s response.http -o evidence.png
+pocing http -r request.http -s response.http -o evidence.png
 
 # Highlight the credential leak line in request and the token in response
-taker http -r request.http -s response.http --hr "7" --hs "7" -o evidence.png
+pocing http -r request.http -s response.http --hr "7" --hs "7" -o evidence.png
 
 # Wider panels for responses with long headers
-taker http -r req.http -s res.http --wrap-width 110 -o evidence.png
+pocing http -r req.http -s res.http --wrap-width 110 -o evidence.png
 
 # A long body: a 32-row Burp viewport scrolled to the finding
-taker http -r req.http -s res.http --hs 1520 -o evidence.png
+pocing http -r req.http -s res.http --hs 1520 -o evidence.png
 
 # ...or show every line (tall image), or 6 lines of context only
-taker http -r req.http -s res.http --max-lines 0 -o evidence.png
-taker http -r req.http -s res.http --hs 1520 -c 6 -o evidence.png
+pocing http -r req.http -s res.http --max-lines 0 -o evidence.png
+pocing http -r req.http -s res.http --hs 1520 -c 6 -o evidence.png
 
 # Burp's dark theme
-taker http -r req.http -s res.http --theme dark -o evidence.png
+pocing http -r req.http -s res.http --theme dark -o evidence.png
 
 # Response headers only
-taker http -r req.http -s res.http --ns 1-30 -o evidence.png
+pocing http -r req.http -s res.http --ns 1-30 -o evidence.png
 
 # Box a value wherever it appears, in either panel, and caption the finding
-taker http -r req.http -s res.http \
+pocing http -r req.http -s res.http \
   -m "sk_live_4xT9mK2pQrN8vW1" -m "read:users write:admin" \
   -L "SOLTAU-005 · client_secret in the body; returned token grants write:admin" \
   -o evidence.png
@@ -187,7 +186,7 @@ taker http -r req.http -s res.http \
 **Credential leak — highlighted request line 7, response line 7:**
 
 ```bash
-taker http -r request.http -s response.http --hr 7 --hs 7 -o evidence.png
+pocing http -r request.http -s response.http --hr 7 --hs 7 -o evidence.png
 ```
 
 ![HTTP evidence](assets/example-http.png)
@@ -214,14 +213,14 @@ Content-Type: application/json
 ## Themes
 
 ```bash
-taker --list-themes
+pocing --list-themes
 ```
 
 | Key | Name |
 |-----|------|
 | `vscode-dark` *(default)* | VS Code Dark+ |
-| `burp-light` | Burp Suite (light) — the `taker http` default, and **only** there |
-| `burp` | Burp Suite (dark) — used by `taker http --theme burp` and **only** there: its style covers the HTTP lexer's tokens, so source code would render flat |
+| `burp-light` | Burp Suite (light) — the `pocing http` default, and **only** there |
+| `burp` | Burp Suite (dark) — used by `pocing http --theme burp` and **only** there: its style covers the HTTP lexer's tokens, so source code would render flat |
 | `dracula` | Dracula |
 | `nord` | Nord |
 | `catppuccin-mocha` | Catppuccin Mocha |
@@ -239,7 +238,7 @@ taker --list-themes
 Guards against shipping a screenshot that proves nothing:
 
 - **No matching lines** → error, exit 1. `-n 500-600` on a 100-line file will not emit a blank PNG. Same for `--nr` / `--ns`, and for an empty request or response file.
-- **Body too long to look at** → a 3000-line response renders 129 000px tall, past the 32 767px browsers decode. `taker` refuses before allocating (which would cost about a gigabyte) and names the fix; past 8 000px it warns but still renders, because that call is yours.
+- **Body too long to look at** → a 3000-line response renders 129 000px tall, past the 32 767px browsers decode. `pocing` refuses before allocating (which would cost about a gigabyte) and names the fix; past 8 000px it warns but still renders, because that call is yours.
 - **Nothing highlighted** → warning on stderr. The image is still written, but you are told the `-H` / `--hr` / `--hs` lines are not in the output.
 - **`-m` matched nothing** → warning naming the literal. Shipping a screenshot whose marker silently missed is the failure this tool exists to prevent.
 - **Content too wide** → wraps automatically at the widest column that fits and says so, instead of cropping the line. Use `--wrap-width` to pick the width yourself.
@@ -251,14 +250,14 @@ Guards against shipping a screenshot that proves nothing:
 
 ### MCP server (AI agents)
 
-`taker` is designed to be called by MCP servers and AI agents as part of automated security reporting pipelines. The binary is fully autonomous — no dialogs, no GUI, no network access.
+`pocing` is designed to be called by MCP servers and AI agents as part of automated security reporting pipelines. The binary is fully autonomous — no dialogs, no GUI, no network access.
 
 ```python
 import subprocess
 
 def generate_evidence(file_path: str, highlight_lines: str, context: int = 5, output: str = "evidence.png") -> str:
     result = subprocess.run([
-        "taker", file_path,
+        "pocing", file_path,
         "--highlight", highlight_lines,
         "--context", str(context),
         "--output", output,
@@ -274,7 +273,7 @@ def generate_evidence(file_path: str, highlight_lines: str, context: int = 5, ou
 # GitHub Actions example
 - name: Generate vulnerability evidence
   run: |
-    taker src/auth/login.py \
+    pocing src/auth/login.py \
       --highlight "${{ env.VULN_LINE }}" \
       --context 5 \
       --theme github-dark \
@@ -318,7 +317,7 @@ Any language supported by [chroma](https://github.com/alecthomas/chroma) — 200
 Language is auto-detected from the file extension. Override with `--lang`:
 
 ```bash
-taker payload.txt --lang sql -H 3 -o evidence.png
+pocing payload.txt --lang sql -H 3 -o evidence.png
 ```
 
 ---

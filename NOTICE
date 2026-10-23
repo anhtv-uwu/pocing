@@ -1,11 +1,11 @@
-taker-burp-light
+pocing
 ================
 
 This is a cleaned, hardened fork of taker (https://github.com/tachote/taker),
 copyright (c) the taker authors, distributed under the MIT License (see LICENSE).
 
 Forked from upstream commit bf29019. Changes in this fork:
-  - Burp Suite light theme (default for `taker http`), fitted against a real
+  - Burp Suite light theme (default for `pocing http`), fitted against a real
     Burp capture: message-editor header and controls, Pretty-printed HTML,
     current-line band, bottom search toolbar and scrollbar with a
     `--max-lines` viewport. `--theme dark` is Burp's macOS dark theme with

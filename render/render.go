@@ -772,7 +772,7 @@ func Render(cfg *Config) (*image.NRGBA, error) {
 		wrapCols = fitCols
 		if !cfg.noWarn {
 			fmt.Fprintf(os.Stderr,
-				"taker: content exceeds %dpx; wrapping at %d columns (use --wrap-width to override)\n",
+				"pocing: content exceeds %dpx; wrapping at %d columns (use --wrap-width to override)\n",
 				maxImageWidth, wrapCols)
 		}
 		vlines = buildVisualLinesMode(cfg.Lines, wrapCols, wordWrap)
@@ -789,7 +789,7 @@ func Render(cfg *Config) (*image.NRGBA, error) {
 	}
 	if l.totalHeight > warnImageHeight && !cfg.noWarn {
 		fmt.Fprintf(os.Stderr,
-			"taker: warning: %q is %dpx tall; --context or a line range makes it readable\n",
+			"pocing: warning: %q is %dpx tall; --context or a line range makes it readable\n",
 			cfg.Title, l.totalHeight)
 	}
 
@@ -894,7 +894,7 @@ func Render(cfg *Config) (*image.NRGBA, error) {
 	// numbers exist: "7:900-999" names a real line and no real columns.
 	if !cfg.noWarn && len(cfg.HighlightLines) > 0 && len(hlRuns) == 0 {
 		fmt.Fprintf(os.Stderr,
-			"taker: warning: nothing was marked in %q; the requested lines or columns are not in the output\n",
+			"pocing: warning: nothing was marked in %q; the requested lines or columns are not in the output\n",
 			cfg.Title)
 	}
 

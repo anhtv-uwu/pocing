@@ -105,7 +105,7 @@ func RenderHTTP(cfg *HTTPConfig) (*image.NRGBA, error) {
 		inReq := highlight.FindLiteral(reqLines, needle)
 		inRes := highlight.FindLiteral(resLines, needle)
 		if inReq == nil && inRes == nil {
-			fmt.Fprintf(os.Stderr, "taker: warning: --mark %q is not in the capture\n", needle)
+			fmt.Fprintf(os.Stderr, "pocing: warning: --mark %q is not in the capture\n", needle)
 			continue
 		}
 		reqHL = reqHL.Merge(inReq)
