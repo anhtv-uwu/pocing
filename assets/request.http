@@ -1,0 +1,7 @@
+POST /oauth2/token HTTP/1.1
+Host: auth.example.com
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic dXNlcjpwYXNz
+Accept: application/json
+
+grant_type=client_credentials&client_id=web_app&client_secret=sk_live_4xT9mK2pQrN8vW1

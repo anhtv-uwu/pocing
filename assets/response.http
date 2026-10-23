@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+X-Request-Id: f3c2a1b0-9d8e-4f7a-b6c5-d4e3f2a1b0c9
+Cache-Control: no-store
+
+{
+  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ3ZWJfYXBwIn0",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "scope": "read:users write:admin"
+}

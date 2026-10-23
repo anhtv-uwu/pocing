@@ -1,0 +1,25 @@
+taker-burp-light
+================
+
+This is a cleaned, hardened fork of taker (https://github.com/tachote/taker),
+copyright (c) the taker authors, distributed under the MIT License (see LICENSE).
+
+Forked from upstream commit bf29019. Changes in this fork:
+  - Burp Suite light theme (default for `taker http`), fitted against a real
+    Burp capture: message-editor header and controls, Pretty-printed HTML,
+    current-line band, bottom search toolbar and scrollbar with a
+    `--max-lines` viewport. `--theme dark` is Burp's macOS dark theme with
+    the same layout and chrome, every colour measured from a real capture.
+  - Message text drawn like Burp on macOS: unhinted, on Burp's 8px cells, with
+    the glyphs' alignment zones snapped to whole pixels (font/zone.go). Menlo
+    is not included; DejaVu Sans Mono stands in for it.
+  - Embedded DejaVu Sans Mono 2.37 regular and bold (Bitstream Vera / DejaVu
+    licence, font/LICENSE-DejaVu.txt) for HTTP message text, and Inter 4.1
+    regular and bold (SIL Open Font License 1.1, font/LICENSE-Inter.txt) for
+    the HTTP chrome and titles.
+  - Hardening: removed the README reference to an external third-party
+    integration, pinned GitHub Actions to commit SHAs, release config no longer
+    publishes to the upstream repository.
+
+No network, process-execution, telemetry or credential-handling code exists in
+this fork.
