@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tachote/taker/highlight"
+	"github.com/anhtv-uwu/pocing/highlight"
 )
 
 // Non-contiguous highlights must produce one box each, not a single box

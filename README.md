@@ -1,10 +1,3 @@
-# taker-burp-light
-
-> **Hardened fork of [tachote/taker](https://github.com/tachote/taker)** (upstream commit `bf29019`)
-> with a Burp Suite **light** theme as the default for `taker http`: Burp's
-> message-editor chrome, Pretty-printed HTML, search toolbar and scrollbar. See [NOTICE](NOTICE).
-> Audited: no network, exec, telemetry or credential code.
-
 A CLI tool for generating professional, publication-ready code and HTTP evidence screenshots for security audits, SAST pipelines, MCP servers, and AI agents.
 
 Produces VS Code Dark+-styled PNG images with syntax highlighting, line numbers, file icons, and red highlight overlays — without requiring a browser, Electron, or any GUI dependency. Single self-contained binary with embedded fonts.
@@ -20,7 +13,7 @@ cd taker-burp-light
 go build -o taker-burp-light .
 ```
 
-Requires Go 1.22+. The Go module path is still `github.com/tachote/taker` so
+Requires Go 1.22+. The Go module path is still `github.com/anhtv-uwu/pocing` so
 upstream imports keep working; the binary/product name is `taker-burp-light`.
 (Examples below say `taker`; substitute `taker-burp-light` or alias it.)
 

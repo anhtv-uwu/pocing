@@ -1,4 +1,4 @@
-module github.com/tachote/taker
+module github.com/anhtv-uwu/pocing
 
 go 1.22
 

@@ -7,7 +7,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/tachote/taker/highlight"
+	"github.com/anhtv-uwu/pocing/highlight"
 )
 
 const (

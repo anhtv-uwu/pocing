@@ -5,7 +5,7 @@ import (
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/styles"
-	"github.com/tachote/taker/highlight"
+	"github.com/anhtv-uwu/pocing/highlight"
 )
 
 // UIColors holds all non-syntax UI element colors for a theme.

@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/tachote/taker/highlight"
-	"github.com/tachote/taker/render"
+	"github.com/anhtv-uwu/pocing/highlight"
+	"github.com/anhtv-uwu/pocing/render"
 )
 
 // SnapCmd renders a single code file.

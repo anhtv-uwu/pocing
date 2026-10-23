@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tachote/taker/highlight"
+	"github.com/anhtv-uwu/pocing/highlight"
 )
 
 func lightLines(t *testing.T, src string) []highlight.LineTokens {

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	customfont "github.com/tachote/taker/font"
-	"github.com/tachote/taker/highlight"
+	customfont "github.com/anhtv-uwu/pocing/font"
+	"github.com/anhtv-uwu/pocing/highlight"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 )
