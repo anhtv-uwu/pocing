@@ -23,8 +23,6 @@ type HTTPConfig struct {
 	ResponseHL highlight.Marks
 	// Literals to find and mark in whichever panel contains them.
 	Mark []string
-	// Caption states what the pane proves; empty leaves the pane bare.
-	Caption string
 
 	// Line specs (with gap sentinels) limiting each panel; nil renders all.
 	RequestLines  []int
@@ -157,14 +155,7 @@ func RenderHTTP(cfg *HTTPConfig) (*image.NRGBA, error) {
 	} else {
 		pane = composeHTTP(reqImg, resImg, theme.UI)
 	}
-	if cfg.Caption == "" {
-		return pane, nil
-	}
-	m, err := loadMetricsFor(theme, cfg.Bold)
-	if err != nil {
-		return nil, err
-	}
-	return withCaption(pane, cfg.Caption, theme.UI, m), nil
+	return pane, nil
 }
 
 // renderPair renders both panels at the same height, so the shorter one's

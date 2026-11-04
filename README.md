@@ -26,7 +26,7 @@ compatibility with upstream imports; the executable is named `pocing`.
 - **Line selection** — render only the lines you need (`1,5,10-20,30-40`), with gap bands stating how many lines were skipped
 - **Context mode** — automatically include N lines around highlighted lines (`--context 5`)
 - **Point at the finding, not the line** — mark a column range (`-H "7:63-85"`) or, better, paste the value itself (`-m "sk_live_4xT9mK2pQrN8vW1"`) and let `pocing` locate every occurrence
-- **Captions** — `-L` adds a strip stating what the image proves, drawn outside the window so it never reads as something the tool under test printed
+- **Code captions** — `-L` adds a strip stating what the code image proves, drawn outside the window so it never reads as something the tool under test printed
 - **Word wrap** — wrap long lines with continuation indicators; wraps automatically rather than cropping
 - **HTTP evidence mode** — side-by-side Request / Response pane that mimics Burp Suite's message editor, so evidence reads like a Burp screenshot
 - **Stdin support** — pipe code directly without creating a temp file
@@ -124,6 +124,8 @@ pocing http -r <request-file> -s <response-file> [flags]
 
 Renders a side-by-side Request / Response pane built to look like Burp Suite's message editor: title strip, `Pretty | Raw | Hex` view tabs with the active one underlined, dense line spacing, a gutter with no rule, and wrapped rows left unnumbered the way Burp does it.
 
+HTTP images contain only the Burp-style panels, with no caption strip underneath.
+
 The default is Burp's **light** theme, fitted pixel-by-pixel against a real Burp Suite capture (`compare/compare_v3.py` scores it; `--dark` scores the dark theme): regular-weight DejaVu Sans Mono message text (`--bold` for the heavier cut), header names in navy with near-black values, cookie / query / form parameter names in blue and values in dark red, HTML tags in magenta with blue attributes, Inter Bold titles and Inter chrome, the orange `Pretty` underline, the eye-slash / blue wrap pill / `\n` / menu controls, the layout switch on the Response panel, a grey current-line band, the bottom search toolbar (`?`, gear, previous / next, *Search* field, *0 highlights*) and the scroll lane. HTML bodies are re-indented the way Burp's Pretty view shows them (`--raw-html` keeps them as sent). Rows word-wrap after a space, or after the `"` that opens an attribute value, with a hanging indent. Long panels are capped at 32 visible rows (`--max-lines`) with a scrollbar thumb positioned on the highlighted rows. `--theme dark` is Burp's macOS **dark** theme: the same layout, chrome and text rendering with every colour measured from a real dark-mode capture (pale-blue start line and header names, grey values, gold HTML tags, periwinkle attributes, green values, the blue wrap pill and layout switch, the `#2f3133` current-line band).
 
 Message text is DejaVu Sans Mono (Menlo's freely licensed Bitstream Vera ancestor; Menlo itself is not shipped) at Burp's 13px, unhinted, forced onto Burp's 8px cells and with its baseline, x-height, cap and ascender snapped to whole pixels so it reads as compactly as Burp on macOS.
@@ -135,7 +137,6 @@ Message text is DejaVu Sans Mono (Menlo's freely licensed Bitstream Vera ancesto
 | `--hr` | Regions to highlight in the request: `8-9`, or `8:20-45` for columns |
 | `--hs` | Regions to highlight in the response: `4`, or `4:12-60` for columns |
 | `--mark` / `-m` | Highlight every occurrence of this text in either panel. Repeatable |
-| `--label` / `-L` | Caption stating what the image proves |
 | `--nr` | Lines to include from the request, e.g. `1-20` |
 | `--ns` | Lines to include from the response, e.g. `1-30` |
 | `-c` | Include N context lines around each highlighted line |
@@ -176,10 +177,9 @@ pocing http -r req.http -s res.http --theme dark -o evidence.png
 # Response headers only
 pocing http -r req.http -s res.http --ns 1-30 -o evidence.png
 
-# Box a value wherever it appears, in either panel, and caption the finding
+# Box a value wherever it appears, in either panel
 pocing http -r req.http -s res.http \
   -m "sk_live_4xT9mK2pQrN8vW1" -m "read:users write:admin" \
-  -L "SOLTAU-005 · client_secret in the body; returned token grants write:admin" \
   -o evidence.png
 ```
 

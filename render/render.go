@@ -912,7 +912,7 @@ func Render(cfg *Config) (*image.NRGBA, error) {
 		drawLightFooter(img, l, ui, 0)
 	}
 	if cfg.HTTPMode {
-		return img, nil // caller composes the panels, then adds the caption
+		return img, nil // caller composes the HTTP panels
 	}
 	// Caption goes outside the window: it annotates the screenshot, it is not
 	// part of the editor being screenshotted.

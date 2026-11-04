@@ -40,7 +40,6 @@ type HTTPCmd struct {
 	ReqHL     string   `name:"hr" help:"Regions to highlight in request: '8-9' or '8:20-45' for columns."`
 	ResHL     string   `name:"hs" help:"Regions to highlight in response: '4' or '4:12-60' for columns."`
 	Mark      []string `short:"m" help:"Highlight every occurrence of this text in either panel. Repeatable."`
-	Label     string   `short:"L" help:"Caption strip stating what the image proves."`
 	ReqLines  string   `name:"nr" help:"Lines to include from the request, e.g. '1-20'."`
 	ResLines  string   `name:"ns" help:"Lines to include from the response, e.g. '1-30'."`
 	Context   int      `short:"c" default:"0" help:"Include N context lines around each highlighted line; applies per panel."`
@@ -275,7 +274,6 @@ func runHTTP(cmd *HTTPCmd) {
 		ResponseLines: parseLineSpec("--ns", cmd.ResLines),
 		Context:       cmd.Context,
 		WrapWidth:     cmd.WrapWidth,
-		Caption:       cmd.Label,
 		Dark:          dark,
 		Bold:          cmd.Bold,
 		RawHTML:       cmd.RawHTML,

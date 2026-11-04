@@ -204,7 +204,7 @@ func TestHTTPIsAlwaysBurp(t *testing.T) {
 }
 
 var httpConfigFields = []string{
-	"Request", "Response", "RequestHL", "ResponseHL", "Mark", "Caption",
+	"Request", "Response", "RequestHL", "ResponseHL", "Mark",
 	"RequestLines", "ResponseLines", "Context", "WrapWidth", "Dark", "Bold",
 	"RawHTML", "MaxRows", "RequestCaret", "ResponseCaret",
 }
