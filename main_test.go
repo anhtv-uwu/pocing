@@ -67,3 +67,33 @@ func TestDecode(t *testing.T) {
 		})
 	}
 }
+
+// A --mark needle has to go through the same door as the capture. Vietnamese
+// copied from a macOS source arrives decomposed, and an un-normalised needle
+// would then match nothing in text the reader can plainly see in the image —
+// the silently unmarked screenshot that findMarks' warning exists to prevent.
+func TestDecodeArgsNormalisesNeedles(t *testing.T) {
+	// "mật khẩu" decomposed: dot-below sorts before the circumflex under
+	// canonical ordering, as norm.NFD emits it.
+	nfd := []string{"mật khẩu", "Nguyễn"}
+	want := []string{"mật khẩu", "Nguyễn"}
+	// Guard against an editor quietly composing the line above: if it did,
+	// every assertion below would still pass while testing nothing.
+	for i := range nfd {
+		if nfd[i] == want[i] {
+			t.Fatalf("needle %d is already composed in the source; this test no longer tests anything", i)
+		}
+	}
+	got := decodeArgs(nfd)
+	if len(got) != len(want) {
+		t.Fatalf("decodeArgs returned %d needles, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("decodeArgs[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+	if decodeArgs(nil) == nil {
+		t.Error("decodeArgs(nil) returned nil; callers pass the result straight on")
+	}
+}

@@ -31,10 +31,25 @@ import (
 //     macOS filesystems and some HTTP clients hand over — would print its
 //     tone marks in their own columns, beside the letters instead of above
 //     them. NFC puts each syllable back into one precomposed rune, one cell.
+//
+// --mark needles go through the same door (decodeArgs): a needle has to be
+// normalised exactly as the capture was, or a Vietnamese string copied from a
+// macOS source — decomposed by default — would match nothing in text that is
+// plainly visible in the image, which is the silently unmarked screenshot the
+// --mark warning exists to prevent.
 func decode(b []byte) string {
 	s := strings.TrimPrefix(string(b), "\ufeff")
 	s = strings.ToValidUTF8(s, "\ufffd")
 	return norm.NFC.String(s)
+}
+
+// decodeArgs applies decode to every value of a repeatable text flag.
+func decodeArgs(vs []string) []string {
+	out := make([]string, len(vs))
+	for i, v := range vs {
+		out[i] = decode([]byte(v))
+	}
+	return out
 }
 
 // SnapCmd renders a single code file.
@@ -184,7 +199,7 @@ func runSnap(cmd *SnapCmd) {
 
 	// Merge before the guard: -m supplies marks just as -H does, and --context
 	// centers on either.
-	hlLines = hlLines.Merge(findMarks(all, cmd.Mark))
+	hlLines = hlLines.Merge(findMarks(all, decodeArgs(cmd.Mark)))
 	if cmd.Context > 0 && len(hlLines) == 0 {
 		fmt.Fprintf(os.Stderr, "pocing: --context needs --highlight or --mark to center on\n")
 		os.Exit(1)
@@ -290,7 +305,7 @@ func runHTTP(cmd *HTTPCmd) {
 		Response:      decode(resSrc),
 		RequestHL:     reqHL,
 		ResponseHL:    resHL,
-		Mark:          cmd.Mark,
+		Mark:          decodeArgs(cmd.Mark),
 		RequestLines:  parseLineSpec("--nr", cmd.ReqLines),
 		ResponseLines: parseLineSpec("--ns", cmd.ResLines),
 		Context:       cmd.Context,
