@@ -28,6 +28,10 @@ type zoneFace struct {
 	m     font.Metrics
 	rast  vector.Rasterizer
 	mask  image.Alpha
+	// refTop is the ink top of 'a': the base height a combining mark is
+	// drawn for, and so the zero point for stacking one (see compose.go).
+	refTop fixed.Int26_6
+	comp   map[rune]*composed
 }
 
 // knot maps a natural height (px above the baseline) to its snapped height.
@@ -67,7 +71,39 @@ func ZoneFace(data []byte, sizePt, dpi, gridPx float64) (font.Face, error) {
 			z.knots = append(z.knots, k)
 		}
 	}
+	if h, ok := z.edge('a', true); ok {
+		z.refTop = fixed.Int26_6(math.Round(h * 64))
+	}
 	return z, nil
+}
+
+// index is r's glyph in the font, or 0 when the font has none.
+func (z *zoneFace) index(r rune) sfnt.GlyphIndex {
+	x, err := z.f.GlyphIndex(&z.buf, r)
+	if err != nil {
+		return 0
+	}
+	return x
+}
+
+// outline is r's contours at the face's ppem, assembled from a base glyph and
+// a combining mark when the font has no glyph of its own for r.
+func (z *zoneFace) outline(r rune) (segs []sfnt.Segment, b fixed.Rectangle26_6, adv fixed.Int26_6, ok bool) {
+	if x := z.index(r); x != 0 {
+		b, adv, err := z.f.GlyphBounds(&z.buf, x, z.ppem, font.HintingNone)
+		if err != nil {
+			return nil, b, 0, false
+		}
+		segs, err := z.f.LoadGlyph(&z.buf, x, z.ppem, nil)
+		if err != nil {
+			return nil, b, 0, false
+		}
+		return segs, b, adv, true
+	}
+	if c := z.composition(r); c != nil {
+		return c.segs, c.b, c.adv, true
+	}
+	return nil, fixed.Rectangle26_6{}, 0, false
 }
 
 // edge is the top (or bottom) of r's flat ink, in px above the baseline.
@@ -122,34 +158,48 @@ func (z *zoneFace) Kern(r0, r1 rune) fixed.Int26_6 {
 }
 
 func (z *zoneFace) GlyphAdvance(r rune) (fixed.Int26_6, bool) {
-	x, _ := z.f.GlyphIndex(&z.buf, r)
-	adv, err := z.f.GlyphAdvance(&z.buf, x, z.ppem, font.HintingNone)
-	return adv, err == nil && x != 0
+	if x := z.index(r); x != 0 {
+		adv, err := z.f.GlyphAdvance(&z.buf, x, z.ppem, font.HintingNone)
+		return adv, err == nil
+	}
+	if c := z.composition(r); c != nil {
+		return c.adv, true
+	}
+	// No glyph anywhere: report .notdef's advance so the cell still holds its
+	// width. A zero advance would collapse the column and slide the rest of
+	// the row — and every highlight box on it — to the left.
+	adv, err := z.f.GlyphAdvance(&z.buf, 0, z.ppem, font.HintingNone)
+	if err != nil {
+		return 0, false
+	}
+	return adv, false
 }
 
 func (z *zoneFace) GlyphBounds(r rune) (fixed.Rectangle26_6, fixed.Int26_6, bool) {
-	x, _ := z.f.GlyphIndex(&z.buf, r)
-	b, adv, err := z.f.GlyphBounds(&z.buf, x, z.ppem, font.HintingNone)
-	if err != nil {
-		return fixed.Rectangle26_6{}, 0, false
+	_, b, adv, ok := z.outline(r)
+	if !ok {
+		x := sfnt.GlyphIndex(0)
+		var err error
+		if b, adv, err = z.f.GlyphBounds(&z.buf, x, z.ppem, font.HintingNone); err != nil {
+			return fixed.Rectangle26_6{}, 0, false
+		}
 	}
 	b.Min.Y = fixed.Int26_6(math.Floor(float64(z.warpY(b.Min.Y)) * 64))
 	b.Max.Y = fixed.Int26_6(math.Ceil(float64(z.warpY(b.Max.Y)) * 64))
-	return b, adv, x != 0
+	return b, adv, ok
 }
 
 func (z *zoneFace) Glyph(dot fixed.Point26_6, r rune) (image.Rectangle, image.Image, image.Point, fixed.Int26_6, bool) {
-	x, err := z.f.GlyphIndex(&z.buf, r)
-	if err != nil {
-		return image.Rectangle{}, nil, image.Point{}, 0, false
-	}
-	adv, err := z.f.GlyphAdvance(&z.buf, x, z.ppem, font.HintingNone)
-	if err != nil {
-		return image.Rectangle{}, nil, image.Point{}, 0, false
-	}
-	segs, err := z.f.LoadGlyph(&z.buf, x, z.ppem, nil)
-	if err != nil {
-		return image.Rectangle{}, nil, image.Point{}, 0, false
+	segs, _, adv, ok := z.outline(r)
+	if !ok {
+		// Draw .notdef, as any other face would, but keep its advance.
+		var err error
+		if segs, err = z.f.LoadGlyph(&z.buf, 0, z.ppem, nil); err != nil {
+			return image.Rectangle{}, nil, image.Point{}, 0, false
+		}
+		if adv, err = z.f.GlyphAdvance(&z.buf, 0, z.ppem, font.HintingNone); err != nil {
+			return image.Rectangle{}, nil, image.Point{}, 0, false
+		}
 	}
 
 	type pt struct{ x, y float32 }
@@ -166,13 +216,13 @@ func (z *zoneFace) Glyph(dot fixed.Point26_6, r rune) (image.Rectangle, image.Im
 		}
 	}
 	if len(segs) == 0 {
-		return image.Rectangle{}, &z.mask, image.Point{}, adv, x != 0
+		return image.Rectangle{}, &z.mask, image.Point{}, adv, ok
 	}
 	dr := image.Rect(int(math.Floor(float64(minX))), int(math.Floor(float64(minY))),
 		int(math.Ceil(float64(maxX))), int(math.Ceil(float64(maxY))))
 	w, h := dr.Dx(), dr.Dy()
 	if w <= 0 || h <= 0 {
-		return image.Rectangle{}, &z.mask, image.Point{}, adv, x != 0
+		return image.Rectangle{}, &z.mask, image.Point{}, adv, ok
 	}
 	if cap(z.mask.Pix) < w*h {
 		z.mask.Pix = make([]uint8, 2*w*h)
@@ -201,5 +251,5 @@ func (z *zoneFace) Glyph(dot fixed.Point26_6, r rune) (image.Rectangle, image.Im
 		}
 	}
 	z.rast.Draw(&z.mask, z.mask.Bounds(), image.Opaque, image.Point{})
-	return dr, &z.mask, image.Point{}, adv, x != 0
+	return dr, &z.mask, image.Point{}, adv, ok
 }

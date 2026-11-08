@@ -13,6 +13,10 @@ Forked from upstream commit bf29019. Changes in this fork:
   - Message text drawn like Burp on macOS: unhinted, on Burp's 8px cells, with
     the glyphs' alignment zones snapped to whole pixels (font/zone.go). Menlo
     is not included; DejaVu Sans Mono stands in for it.
+  - Vietnamese and other accented text: the 46 precomposed letters DejaVu Sans
+    Mono does not carry are assembled at render time from a base glyph and a
+    combining mark of that same font (font/compose.go), and input is
+    NFC-normalised, rather than falling back to a second typeface.
   - Embedded DejaVu Sans Mono 2.37 regular and bold (Bitstream Vera / DejaVu
     licence, font/LICENSE-DejaVu.txt) for HTTP message text, and Inter 4.1
     regular and bold (SIL Open Font License 1.1, font/LICENSE-Inter.txt) for

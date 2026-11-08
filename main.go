@@ -14,7 +14,28 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/anhtv-uwu/pocing/highlight"
 	"github.com/anhtv-uwu/pocing/render"
+	"golang.org/x/text/unicode/norm"
 )
+
+// decode turns a capture on disk into text the renderer can lay out.
+//
+// Three things are fixed here rather than anywhere downstream, because every
+// later stage counts runes and would faithfully lay out the damage:
+//
+//   - A UTF-8 BOM, which editors on Windows add, would otherwise become the
+//     first character of line 1 and stop the request line being recognised.
+//   - Invalid bytes (a capture saved as Windows-1258 or Latin-1, or a binary
+//     body) become U+FFFD instead of splitting a rune mid-sequence.
+//   - Decomposed text is composed: in a monospace font a combining mark is a
+//     full-width spacing glyph, so "tiế\u0301ng" saved in NFD — which is what
+//     macOS filesystems and some HTTP clients hand over — would print its
+//     tone marks in their own columns, beside the letters instead of above
+//     them. NFC puts each syllable back into one precomposed rune, one cell.
+func decode(b []byte) string {
+	s := strings.TrimPrefix(string(b), "\ufeff")
+	s = strings.ToValidUTF8(s, "\ufffd")
+	return norm.NFC.String(s)
+}
 
 // SnapCmd renders a single code file.
 type SnapCmd struct {
@@ -149,7 +170,7 @@ func runSnap(cmd *SnapCmd) {
 		title = "code"
 	}
 
-	all, err := highlight.Tokenize(string(src), cmd.Lang, cmd.File, theme.Chroma)
+	all, err := highlight.Tokenize(decode(src), cmd.Lang, cmd.File, theme.Chroma)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "pocing: tokenize: %v\n", err)
 		os.Exit(1)
@@ -265,8 +286,8 @@ func runHTTP(cmd *HTTPCmd) {
 	}
 
 	img, err := render.RenderHTTP(&render.HTTPConfig{
-		Request:       string(reqSrc),
-		Response:      string(resSrc),
+		Request:       decode(reqSrc),
+		Response:      decode(resSrc),
 		RequestHL:     reqHL,
 		ResponseHL:    resHL,
 		Mark:          cmd.Mark,

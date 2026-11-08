@@ -4,7 +4,6 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"strconv"
 
 	"golang.org/x/image/font"
 )
@@ -24,8 +23,7 @@ const (
 	lightFooterH      = lightFooterSepH + lightFooterBodyH + lightFooterSepH
 	lightFooterFieldL = 244
 	lightFooterFieldR = 1020 // widest the search field gets (the default 71-column panel)
-	lightFooterHLGap  = 45   // search field to the match count
-	lightFooterHLR    = 23   // match-count ink end to the panel's right edge
+	lightFooterFieldP = 23   // search field to the panel's right edge
 	lightFooterFieldW = 120  // narrowest search field, still holding the magnifier
 )
 
@@ -96,8 +94,8 @@ func drawLightScrollbar(img *image.NRGBA, l *layout, ui UIColors) {
 }
 
 // drawLightFooter draws the editor's search toolbar: help, settings, previous
-// and next match, the search field, and the match count.
-func drawLightFooter(img *image.NRGBA, l *layout, ui UIColors, matches int) {
+// and next match, and the search field.
+func drawLightFooter(img *image.NRGBA, l *layout, ui UIColors) {
 	w := l.totalWidth
 	top := l.codeBottom()
 	fillRect(img, image.Rect(0, top, w, top+lightFooterSepH), ui.TabBorder)
@@ -123,14 +121,9 @@ func drawLightFooter(img *image.NRGBA, l *layout, ui UIColors, matches int) {
 		drawArrow(img, x0+24, float64(top)+46, dir, fg)
 	}
 
-	// The match count is pinned to the panel's right edge and the search field
-	// gives way to it, so the count stays whole at any panel width.
-	label := strconv.Itoa(matches) + " highlight"
-	if matches != 1 {
-		label += "s"
-	}
-	hlx := w - lightFooterHLR - inkW(l.uiFace, label)
-	fieldR := min(lightFooterFieldR, hlx-lightFooterHLGap)
+	// The search field runs to the panel's right edge, keeping a margin, and
+	// never narrower than the magnifier needs.
+	fieldR := min(lightFooterFieldR, w-lightFooterFieldP)
 	fieldR = max(fieldR, lightFooterFieldL+lightFooterFieldW)
 
 	// Search field.
@@ -142,8 +135,6 @@ func drawLightFooter(img *image.NRGBA, l *layout, ui UIColors, matches int) {
 	mx, my := float64(fieldR-26), float64(top)+44
 	strokeCircle(img, mx, my, 9, 2.6, fg)
 	strokeLine(img, mx-6.5, my+6.5, mx-14, my+14, 2.8, fg)
-
-	inkLeft(img, l.uiFace, label, hlx, top+56, fg)
 }
 
 // inkLeft draws s with its ink starting exactly at x.
