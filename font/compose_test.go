@@ -111,14 +111,16 @@ func TestComposedMarksSitAboveTheBase(t *testing.T) {
 	}
 }
 
-// stackRise is a guess at how a type designer raises a second accent. Check it
-// against the designer's own answer, on the letters this font does carry: an
-// accent over a plain base (á), over a capital (Á) and over another accent (ṍ).
-// Within a 2x pixel of the real glyph is as close as a rule of thumb gets.
+// stackRise and the stacking ceiling are a guess at how a type designer raises
+// a second accent. Check them against the designer's own answer, on the letters
+// this font does carry: an accent over a plain base (á), over a capital (Á),
+// over another accent on a lowercase base (ṍ) and — the case the ratio alone
+// got wrong by 3px — over an accented capital (Ằ, Ṍ, Ǚ). Within a 2x pixel of
+// the real glyph is as close as a rule of thumb gets.
 func TestStackRiseMatchesTheFontsOwnGlyphs(t *testing.T) {
 	z := lightFace(t, DejaVuSansMonoTTF)
 	const tol = fixed.Int26_6(64) // one pixel at 2x
-	for _, r := range []rune{'á', 'à', 'ã', 'é', 'ó', 'ú', 'Á', 'Ã', 'ṍ', 'ṹ'} {
+	for _, r := range []rune{'á', 'à', 'ã', 'é', 'ó', 'ú', 'Á', 'Ã', 'ṍ', 'ṹ', 'Ằ', 'Ṍ', 'Ṹ', 'Ǘ', 'Ǚ'} {
 		x := z.index(r)
 		if x == 0 {
 			t.Fatalf("%q is missing from the font, so it cannot be a reference", r)
@@ -151,5 +153,47 @@ func TestUnknownRuneKeepsItsAdvance(t *testing.T) {
 		if adv == 0 {
 			t.Errorf("GlyphAdvance(U+%04X) = 0; an unknown rune must still take a cell", r)
 		}
+	}
+}
+
+// The row a Burp panel draws text in is 34px tall with the baseline 26px down,
+// so ink more than 26px above the baseline leaves the row: above the highlight
+// band, which is clipped to the row; into the descenders of the line before;
+// and on row 1, over the panel header. A synthesized letter may not climb any
+// higher than the font's own stacked accents already do.
+func TestComposedGlyphsStayInTheRow(t *testing.T) {
+	for _, w := range []struct {
+		name string
+		ttf  []byte
+	}{{"regular", DejaVuSansMonoTTF}, {"bold", DejaVuSansMonoBoldTTF}} {
+		t.Run(w.name, func(t *testing.T) {
+			z := lightFace(t, w.ttf)
+			// What the font itself reaches, measured the same way.
+			var ceiling fixed.Int26_6
+			for _, r := range []rune{'Ằ', 'Ṍ', 'Ǚ', 'ṍ', 'Á', 'Ậ'} {
+				if z.index(r) == 0 {
+					continue
+				}
+				if b, _, ok := z.GlyphBounds(r); ok && -b.Min.Y > ceiling {
+					ceiling = -b.Min.Y
+				}
+			}
+			if ceiling == 0 {
+				t.Skip("no reference glyph to measure the font's own ceiling")
+			}
+			for _, r := range vietnamese() {
+				if z.index(r) != 0 {
+					continue // the font's own glyph, not ours to judge
+				}
+				b, _, ok := z.GlyphBounds(r)
+				if !ok {
+					continue // reported by TestVietnameseResolves
+				}
+				if -b.Min.Y > ceiling {
+					t.Errorf("%q U+%04X reaches %.2fpx above the baseline; the font's own accents stop at %.2f",
+						r, r, float64(-b.Min.Y)/64, float64(ceiling)/64)
+				}
+			}
+		})
 	}
 }

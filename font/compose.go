@@ -49,6 +49,11 @@ func (z *zoneFace) composition(r rune) *composed {
 }
 
 func (z *zoneFace) compose(r rune) *composed {
+	// Without 'a' there is no height to stack a mark against, and guessing
+	// would fling every accent a cap-height clear of its letter.
+	if z.refTop <= 0 {
+		return nil
+	}
 	d := []rune(norm.NFD.String(string(r)))
 	if len(d) < 2 {
 		return nil
@@ -93,6 +98,16 @@ func (z *zoneFace) compose(r rune) *composed {
 	if above {
 		if extra := z.refTop - (-bb.Min.Y); extra < 0 {
 			rise = fixed.Int26_6(float64(-extra) * stackRise)
+		}
+		// Never climb past the line the font's own stacked accents stop at.
+		// Over an accented capital — Ấ, Ổ, Ẳ — the proportional rise alone
+		// overshoots it by 2 to 4 pixels, which puts the tone mark outside
+		// the row: above the highlight band that is clipped to the row, into
+		// the descenders of the line before, and on row 1 over the panel
+		// header. It would also disagree with the font's own Ậ and Ộ in the
+		// very same word.
+		if ceiling := z.stackTop + mb.Min.Y; z.stackTop > 0 && rise > ceiling {
+			rise = max(ceiling, 0)
 		}
 	}
 

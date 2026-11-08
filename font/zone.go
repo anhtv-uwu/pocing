@@ -30,8 +30,12 @@ type zoneFace struct {
 	mask  image.Alpha
 	// refTop is the ink top of 'a': the base height a combining mark is
 	// drawn for, and so the zero point for stacking one (see compose.go).
-	refTop fixed.Int26_6
-	comp   map[rune]*composed
+	// stackTop is the ceiling the font's own stacked accents stop at. Both
+	// are zero when the font does not supply the glyphs to measure them, and
+	// composition is then switched off rather than guessed at.
+	refTop   fixed.Int26_6
+	stackTop fixed.Int26_6
+	comp     map[rune]*composed
 }
 
 // knot maps a natural height (px above the baseline) to its snapped height.
@@ -73,6 +77,16 @@ func ZoneFace(data []byte, sizePt, dpi, gridPx float64) (font.Face, error) {
 	}
 	if h, ok := z.edge('a', true); ok {
 		z.refTop = fixed.Int26_6(math.Round(h * 64))
+	}
+	// A type designer does not keep raising a second accent with the height of
+	// its base: past a point they all park on one line. These are the font's
+	// own doubly accented glyphs; the highest of them is that line.
+	for _, r := range []rune{'ṍ', 'Ằ', 'Ǚ', 'Ǘ', 'Ṹ', 'ǘ', 'ằ'} {
+		if h, ok := z.edge(r, true); ok {
+			if t := fixed.Int26_6(math.Round(h * 64)); t > z.stackTop {
+				z.stackTop = t
+			}
+		}
 	}
 	return z, nil
 }

@@ -39,6 +39,15 @@ func TestDecode(t *testing.T) {
 		in:   []byte{'a', 0xff, 'b'},
 		want: "a\ufffdb",
 	}, {
+		// One box per bad byte, not one per run. A body that is really a PNG
+		// or a gzip stream has to keep its length: collapsing a run would both
+		// understate how much binary came back and shift every column after
+		// it, so a --hs column spec written against the capture would point
+		// somewhere else.
+		name: "each invalid byte gets its own replacement",
+		in:   []byte{'I', 'H', 'D', 'R', 0xff, 0xfe, 0xfd, 0xfc},
+		want: "IHDR\ufffd\ufffd\ufffd\ufffd",
+	}, {
 		// The input is literally decomposed — "tie" U+0302 U+0301 "ng Vie"
 		// U+0323 U+0302 "t" — which is the form macOS filesystems and some
 		// HTTP clients hand over. It must come back as the precomposed runes

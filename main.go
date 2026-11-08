@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"image"
 	"image/png"
@@ -10,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/alecthomas/kong"
 	"github.com/anhtv-uwu/pocing/highlight"
@@ -25,7 +25,7 @@ import (
 //   - A UTF-8 BOM, which editors on Windows add, would otherwise become the
 //     first character of line 1 and stop the request line being recognised.
 //   - Invalid bytes (a capture saved as Windows-1258 or Latin-1, or a binary
-//     body) become U+FFFD instead of splitting a rune mid-sequence.
+//     body) become one U+FFFD each instead of splitting a rune mid-sequence.
 //   - Decomposed text is composed: in a monospace font a combining mark is a
 //     full-width spacing glyph, so "tiế\u0301ng" saved in NFD — which is what
 //     macOS filesystems and some HTTP clients hand over — would print its
@@ -39,8 +39,32 @@ import (
 // --mark warning exists to prevent.
 func decode(b []byte) string {
 	s := strings.TrimPrefix(string(b), "\ufeff")
-	s = strings.ToValidUTF8(s, "\ufffd")
-	return norm.NFC.String(s)
+	return norm.NFC.String(validUTF8(s))
+}
+
+// validUTF8 replaces each invalid byte with U+FFFD — one per byte, not one per
+// run, which is what strings.ToValidUTF8 would do. A response body that is
+// really a PNG or a gzip stream has to keep its length: collapsing a run of
+// eight bad bytes into a single box both understates how much binary came back
+// and shifts every column after it, so a --hs column spec written against the
+// capture would point somewhere else.
+func validUTF8(s string) string {
+	if utf8.ValidString(s) {
+		return s
+	}
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); {
+		r, n := utf8.DecodeRuneInString(s[i:])
+		if r == utf8.RuneError && n <= 1 {
+			b.WriteRune(utf8.RuneError)
+			i++
+			continue
+		}
+		b.WriteString(s[i : i+n])
+		i += n
+	}
+	return b.String()
 }
 
 // decodeArgs applies decode to every value of a repeatable text flag.
@@ -265,12 +289,15 @@ func runHTTP(cmd *HTTPCmd) {
 		fmt.Fprintf(os.Stderr, "pocing: read response: %v\n", err)
 		os.Exit(1)
 	}
-	// An empty capture is a mistake upstream, not evidence of anything.
-	if len(bytes.TrimSpace(reqSrc)) == 0 {
+	// An empty capture is a mistake upstream, not evidence of anything. The
+	// check is on the decoded text: a file holding nothing but a byte order
+	// mark is empty, however many bytes it takes up.
+	reqText, resText := decode(reqSrc), decode(resSrc)
+	if strings.TrimSpace(reqText) == "" {
 		fmt.Fprintf(os.Stderr, "pocing: %s is empty\n", cmd.Request)
 		os.Exit(1)
 	}
-	if len(bytes.TrimSpace(resSrc)) == 0 {
+	if strings.TrimSpace(resText) == "" {
 		fmt.Fprintf(os.Stderr, "pocing: %s is empty\n", cmd.Response)
 		os.Exit(1)
 	}
@@ -301,8 +328,8 @@ func runHTTP(cmd *HTTPCmd) {
 	}
 
 	img, err := render.RenderHTTP(&render.HTTPConfig{
-		Request:       decode(reqSrc),
-		Response:      decode(resSrc),
+		Request:       reqText,
+		Response:      resText,
 		RequestHL:     reqHL,
 		ResponseHL:    resHL,
 		Mark:          decodeArgs(cmd.Mark),
