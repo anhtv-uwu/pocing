@@ -909,7 +909,7 @@ func Render(cfg *Config) (*image.NRGBA, error) {
 		// view's last row is clipped by them exactly as in Burp.
 		fillRect(img, image.Rect(l.gutterW, l.codeAreaY, l.gutterW+lightGutterSW, l.codeBottom()), ui.GutterSep)
 		drawLightScrollbar(img, l, ui)
-		drawLightFooter(img, l, ui, 0)
+		drawLightFooter(img, l, ui)
 	}
 	if cfg.HTTPMode {
 		return img, nil // caller composes the HTTP panels

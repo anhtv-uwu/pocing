@@ -97,9 +97,11 @@ func TestLightFooter(t *testing.T) {
 	}
 }
 
-// The match count is pinned to each panel's right edge and the search field
-// shrinks for it, so "0 highlights" is never clipped, whatever the width.
-func TestLightFooterCountFits(t *testing.T) {
+// Burp shows a match count at the bottom right of each editor; this renderer
+// does not, because a screenshot has nothing to search and "0 highlights" only
+// invited the reader to wonder what was missed. Nothing may be drawn to the
+// right of the search field, at any panel width, in either theme.
+func TestLightFooterHasNoMatchCount(t *testing.T) {
 	for _, dark := range []bool{false, true} {
 		for _, cols := range []int{20, 40, 68, 71, 73, 100} {
 			img, err := RenderHTTP(&HTTPConfig{Request: "GET / HTTP/1.1\n", Response: "HTTP/1.1 204 No Content\n", WrapWidth: cols, Dark: dark})
@@ -128,24 +130,18 @@ func TestLightFooterCountFits(t *testing.T) {
 			if div < 0 {
 				t.Fatalf("dark=%v cols=%d: no panel divider", dark, cols)
 			}
-			for _, right := range []int{div, b.Dx()} {
-				// Ink must reach close to the edge (the count is there) but stop
-				// short of it (nothing clipped).
-				inkAt := func(x0, x1 int) bool {
-					for x := x0; x < x1; x++ {
-						for y := top + lightFooterSepH; y < top+lightFooterH-lightFooterSepH; y++ {
-							if img.NRGBAAt(x, y) != ui.Bg {
-								return true
-							}
+			// Each panel is drawn into its own canvas, so both the divider and
+			// the image edge are a panel's right edge.
+			for _, panel := range [][2]int{{0, div}, {div + 1, b.Dx()}} {
+				left, right := panel[0], panel[1]
+				w := right - left
+				fieldR := left + min(lightFooterFieldR, max(w-lightFooterFieldP, lightFooterFieldL+lightFooterFieldW))
+				for x := fieldR + 4; x < right; x++ {
+					for y := top + lightFooterSepH; y < top+lightFooterH-lightFooterSepH; y++ {
+						if got := img.NRGBAAt(x, y); got != ui.Bg {
+							t.Fatalf("dark=%v cols=%d: ink %v at (%d,%d), right of the search field (match count back?)", dark, cols, got, x, y)
 						}
 					}
-					return false
-				}
-				if inkAt(right-lightFooterHLR+6, right) {
-					t.Errorf("dark=%v cols=%d: ink in the last %dpx before x=%d (count clipped?)", dark, cols, lightFooterHLR-6, right)
-				}
-				if !inkAt(right-lightFooterHLR-20, right-lightFooterHLR+1) {
-					t.Errorf("dark=%v cols=%d: no match count ending near x=%d", dark, cols, right-lightFooterHLR)
 				}
 			}
 		}
